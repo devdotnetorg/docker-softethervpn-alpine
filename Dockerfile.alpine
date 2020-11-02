@@ -34,18 +34,24 @@ COPY copyables /
 
 ENV LANG=en_US.UTF-8
 
+ENV LIFETIMELOGS=0
+
 RUN apk add -U --no-cache bash iptables openssl-dev \
-    && chmod +x /entrypoint.sh /gencert.sh \
+    && chmod +x /entrypoint.sh /gencert.sh /eraselogs.sh \
     && unzip -o /artifacts.zip -d / \
     && rm /artifacts.zip \
     && rm -rf /opt \
-    && ln -s /usr/vpnserver /opt \
+    && ln -s /usr/vpnserver /opt \    
+    && mkdir -p /usr/vpnserver/config \
+    && cp /usr/vpnserver/vpn_server.config /usr/vpnserver/config/vpn_server.config \
+    && rm /usr/vpnserver/vpn_server.config \
+    && ln -s /usr/vpnserver/config/vpn_server.config /usr/vpnserver/vpn_server.config \
     && find /usr/bin/vpn* -type f ! -name vpnserver \
        -exec sh -c 'ln -s {} /opt/$(basename {})' \;
 
 WORKDIR /usr/vpnserver/
 
-VOLUME ["/usr/vpnserver/server_log/", "/usr/vpnserver/packet_log/", "/usr/vpnserver/security_log/"]
+VOLUME ["/usr/vpnserver/config", "/usr/vpnserver/server_log/", "/usr/vpnserver/packet_log/", "/usr/vpnserver/security_log/"]
 
 ENTRYPOINT ["/entrypoint.sh"]
 

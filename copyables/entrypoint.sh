@@ -1,6 +1,27 @@
 #!/bin/bash
 set -e
 
+#ADD
+if [ "${LIFETIMELOGS}" == "0" ];
+then
+    echo "cron is not need"
+#check cron job via flag folder
+else
+    if [ ! -f /jobexists.txt ];
+    then
+        echo "add cron job"
+        #add cron job
+        echo "*/15 * * * * /eraselogs.sh ${LIFETIMELOGS} > /dev/null 2>&1" >> /etc/crontabs/root
+        #create flag
+        touch /jobexists.txt
+    fi
+# start cron
+    echo "start cron"
+    #/usr/sbin/crond -b
+    /usr/sbin/crond -b -l 0 -L /var/log/crond
+fi
+#END
+
 if [ "$*" == "gencert" ]; then
 
   /gencert.sh
