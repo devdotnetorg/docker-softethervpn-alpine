@@ -1,16 +1,13 @@
 # A simple<sup>*</sup> [SoftEther VPN][1] server Docker image
 
-![](https://github.com/siomiz/SoftEtherVPN/workflows/Docker%20Image%20CI/badge.svg)
-
 <sup>*</sup> "Simple" as in no configuration parameter is needed for a single-user SecureNAT setup.
 
+Based on repo: [GitHub /siomiz/SoftEtherVPN](https://github.com/siomiz/SoftEtherVPN "GitHub /siomiz/SoftEtherVPN")
+
 ## Image Tags
-Base OS Image | Latest Stable ([v4.34-9745-beta](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.34-9745-beta)) | Previous Base | [v4.29-9680-rtm](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.29-9680-rtm)
-------------- | -- | -- | --
-`centos:8` | **`:latest`**, `:centos`, `:9745`, `:4.34`, `:9745-centos`, `:4.34-centos` | `centos:7` | `:9680`, `:4.29`, `:9680-centos`, `4.29-centos`
-`debian:10-slim` | `:debian`, `:9745-debian`, `:4.34-debian` | `debian:10-slim` | `:9680-debian`, `:4.29-debian`
-`alpine:3.12` | `:alpine`, `:9745-alpine`, `:4.34-alpine` | `alpine:3.9` | `:9680-alpine`, `:4.29-alpine`
-`ubuntu:20.04` | `:ubuntu`, `:9745-ubuntu`, `:4.34-ubuntu` | `ubuntu:18.04` | `:9680-ubuntu`, `:4.29-ubuntu`
+Base OS Image | Latest Stable ([v4.34-9745-beta](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.34-9745-beta))
+------------- | --
+`alpine:3.12` | `:latest` `:4.34`
 
 ## Setup
  - L2TP/IPSec PSK + OpenVPN
@@ -18,7 +15,7 @@ Base OS Image | Latest Stable ([v4.34-9745-beta](https://github.com/SoftEtherVPN
  - Perfect Forward Secrecy (DHE-RSA-AES256-SHA)
  - make'd from [the official SoftEther VPN GitHub Stable Edition Repository][2].
 
-`docker run -d --cap-add NET_ADMIN -p 500:500/udp -p 4500:4500/udp -p 1701:1701/tcp -p 1194:1194/udp -p 5555:5555/tcp siomiz/softethervpn`
+`docker run -d --cap-add NET_ADMIN -p 500:500/udp -p 4500:4500/udp -p 1701:1701/tcp -p 1194:1194/udp -p 5555:5555/tcp devdotnetorg/softethervpn-alpine`
 
 Connectivity tested on Android + iOS devices. It seems Android devices do not require L2TP server to have port 1701/tcp open.
 
@@ -58,7 +55,7 @@ Dots (.) are part of the password. Password will not be logged if specified via 
 
 If you specify credentials using environment variables (`-e`), they may be revealed via the process list on host (ex. `ps(1)` command) or `docker inspect` command. It is recommended to mount an already-configured SoftEther VPN config file at `/opt/vpn_server.config`, which contains hashed passwords rather than raw ones. The initial setup will be skipped if this file exists at runtime (in entrypoint script). You can obtain this file from a running container using [`docker cp` command](https://docs.docker.com/engine/reference/commandline/cp/).
 
-## Configurations ##
+## ToDO Configurations ##
 
 To make the server configurations persistent beyond the container lifecycle (i.e. to make the config survive a restart), mount a complete config file at `/usr/vpnserver/vpn_server.config`. If this file is mounted the initial setup will be skipped.
 To obtain a config file template, `docker run` the initial setup with Server & Hub passwords, then `docker cp` out the config file:
@@ -78,6 +75,33 @@ By default SoftEther has a very verbose logging system. For privacy or space con
 -v /dev/null:/usr/vpnserver/packet_log \
 -v /dev/null:/usr/vpnserver/security_log
 ```
+If logs are needed, then logs will accumulate over time. Added cron job for regular cleaning of logs. The cron job runs every 15 minutes. The environment LIFETIMELOGS controls the lifetime of the logs in hours. (default) If LIFETIMELOGS = 0, then the cron job does not start. if LIFETIMELOGS = 2, logs older than 2 hours will be deleted. But you need to remember that a new log file is created at 00:00 every day and recorded until 23:59:59, name: vpn_20201104.log, vpn_20201105.log, etc.
+Thus, the vpn_20201104.log file will be deleted on 05 November 2020, at 02: 00-02: 15 minutes. There will be daily accumulation of information, if you have not switched to the hourly mode of creating log files.
+Example: docker run -d --cap-add NET_ADMIN -p 500:500/udp -p 4500:4500/udp -p 1701:1701/tcp -p 1194:1194/udp -p 5555:5555/tcp -e LIFETIMELOGS=2 devdotnetorg/softethervpn-alpine
+YAML:
+```
+#VPN
+  softethervpn:
+    image: devdotnetorg/softethervpn-alpine
+    container_name: softethervpn_local
+    restart: always
+    ports:
+      - 992:992/tcp
+      - 1194:1194/udp
+      - 5555:5555/tcp
+      - 53:53/udp     
+      - 1195:1195/udp      
+    environment:
+      - LIFETIMELOGS=2
+    volumes:
+      - softethervpn-config:/usr/vpnserver/config
+      - softethervpn-logs-server:/usr/vpnserver/server_log      
+      - softethervpn-logs-packet:/usr/vpnserver/packet_log
+      - softethervpn-logs-security:/usr/vpnserver/security_log      
+    cap_add:
+      - NET_ADMIN    
+```
+
 ## Server & Hub Management Commands ##
 
 Management commands can be executed just before the server & hub admin passwords are set via:
@@ -91,7 +115,7 @@ Note that commands run only if the config file is not mounted. Some commands (li
 
 ## OpenVPN ##
 
-`docker run -d --cap-add NET_ADMIN -p 1194:1194/udp siomiz/softethervpn`
+`docker run -d --cap-add NET_ADMIN -p 1194:1194/udp devdotnetorg/softethervpn-alpine`
 
 The entire log can be saved and used as an `.ovpn` config file (change as needed).
 
@@ -111,6 +135,11 @@ The output will have `CERT` and `KEY` already filled in. Modify `PSK`/`USERS`.
 
 Certificate volumes support (like `-v` or `--volumes-from`) will be added at some point...
 
+## ToDo ##
+
+Make image for arm64v8 and arm32v7
+
+
 ## License ##
 
 [MIT License][4].
@@ -118,4 +147,4 @@ Certificate volumes support (like `-v` or `--volumes-from`) will be added at som
   [1]: https://www.softether.org/
   [2]: https://github.com/SoftEtherVPN/SoftEtherVPN_Stable
   [3]: https://docs.docker.com/engine/reference/commandline/run/#set-environment-variables-e-env-env-file
-  [4]: https://github.com/siomiz/SoftEtherVPN/raw/master/LICENSE
+  [4]: https://github.com/devdotnetorg/docker-softethervpn-alpine/raw/master/LICENSE

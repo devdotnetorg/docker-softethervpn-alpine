@@ -18,7 +18,7 @@ else
 # start cron
     echo "start cron"
     #/usr/sbin/crond -b
-    /usr/sbin/crond -b -l 0 -L /var/log/crond
+    /usr/sbin/crond -b -l 0 -L /dev/null 2>&1
 fi
 #END
 

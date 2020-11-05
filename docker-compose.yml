@@ -2,9 +2,12 @@ version: "3"
 
 services:
   app:
-    image: siomiz/softethervpn
+    image: devdotnetorg/softethervpn-alpine
     volumes:
-      - ./vpn_server.config:/usr/vpnserver/vpn_server.config
+      - softethervpn-config:/usr/vpnserver/config
+      - softethervpn-logs-server:/usr/vpnserver/server_log      
+      - softethervpn-logs-packet:/usr/vpnserver/packet_log
+      - softethervpn-logs-security:/usr/vpnserver/security_log
     cap_add:
       - NET_ADMIN
     ports:
