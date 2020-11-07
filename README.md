@@ -79,6 +79,7 @@ If logs are needed, then logs will accumulate over time. Added cron job for regu
 - if `-e LIFETIMELOGS=2`, logs older than 2 hours will be deleted. But you need to remember that a new log file is created at 00:00 every day and recorded until 23:59:59, name: vpn_20201104.log, vpn_20201105.log, etc. Thus, the vpn_20201104.log file will be deleted on 05 November 2020, at 02: 00-02: 15 minutes. There will be daily accumulation of information, if you have not switched to the hourly mode of creating log files.
 
 Example: `docker run -d --cap-add NET_ADMIN -p 500:500/udp -p 4500:4500/udp -p 1701:1701/tcp -p 1194:1194/udp -p 5555:5555/tcp -e LIFETIMELOGS=2 devdotnetorg/softethervpn-alpine`
+
 YAML:
 ```
 #VPN
@@ -138,8 +139,8 @@ Certificate volumes support (like `-v` or `--volumes-from`) will be added at som
 
 ## ToDo ##
 
-Make image for arm64v8 and arm32v7
-
+Dockerfile.aarch64 - Image for ARM64 arm64v8 aarch64 build on Banana Pi BPI-M64 with support MUSL
+Coming soon for ARM32 arm32v7
 
 ## License ##
 

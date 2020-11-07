@@ -3,11 +3,13 @@ FROM alpine:3.12 as prep
 ENV BUILD_VERSION=4.34-9745-beta \
     SHA256_SUM=a2d7951f4fafcef96ab8341a948a8d09ca02030e4161c5e90a34882aa8b34224
 
-RUN wget https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/archive/v${BUILD_VERSION}.tar.gz \
-    && echo "${SHA256_SUM}  v${BUILD_VERSION}.tar.gz" | sha256sum -c \
-    && mkdir -p /usr/local/src \
-    && tar -x -C /usr/local/src/ -f v${BUILD_VERSION}.tar.gz \
-    && rm v${BUILD_VERSION}.tar.gz
+RUN apk add -U git \
+	&& mkdir -p /usr/local/src \
+	&& cd /usr/local/src \
+	&& git clone https://github.com/SoftEtherVPN/SoftEtherVPN.git \
+	&& cd /usr/local/src/SoftEtherVPN \
+	&& git submodule init \
+	&& git submodule update
 
 FROM alpine:3.12 as build
 
@@ -15,20 +17,23 @@ COPY --from=prep /usr/local/src /usr/local/src
 
 ENV LANG=en_US.UTF-8
 
-RUN apk add -U build-base ncurses-dev openssl-dev readline-dev zip zlib-dev \
-    && cd /usr/local/src/SoftEtherVPN_Stable-* \
-    && ./configure \
-    && make \
-    && make install \
-    && touch /usr/vpnserver/vpn_server.config \
-    && zip -r9 /artifacts.zip /usr/vpn* /usr/bin/vpn*
+RUN apk add -U build-base ncurses-dev openssl-dev readline-dev zip zlib-dev make cmake \
+	&& cd /usr/local/src/SoftEtherVPN \
+	&& export USE_MUSL=YES \
+	&& ./configure \
+	&& make -C build \
+	&& make -C build install
+
+#Add bin files
+RUN touch /usr/local/libexec/softether/vpnserver/vpn_server.config \
+	&& zip -r9 /artifacts.zip /usr/local/libexec/softether/vpn* /usr/local/bin/vpn* /usr/local/lib64/*
 
 FROM alpine:3.12
 
 MAINTAINER DevDotNet.Org <anton@devdotnet.org>
 LABEL maintainer="DevDotNet.Org <anton@devdotnet.org>" \
       contributors="See CONTRIBUTORS file <https://github.com/devdotnetorg/docker-softethervpn-alpine/blob/master/CONTRIBUTORS>"
-
+  
 COPY --from=build /artifacts.zip /
 
 COPY copyables /
@@ -37,10 +42,19 @@ ENV LANG=en_US.UTF-8
 
 ENV LIFETIMELOGS=0
 
-RUN apk add -U --no-cache bash iptables openssl-dev \
+RUN apk add -U --no-cache bash iptables openssl-dev musl \
     && chmod +x /entrypoint.sh /gencert.sh /eraselogs.sh \
     && unzip -o /artifacts.zip -d / \
-    && rm /artifacts.zip \
+	&& rm /artifacts.zip \
+    && mv -v /usr/local/lib64/libmayaqua.so /lib/libmayaqua.so \
+	&& mv -v /usr/local/lib64/libcedar.so /lib/libcedar.so \
+	&& mkdir -p /usr/vpnserver \
+	&& mv -v /usr/local/libexec/softether/vpn* /usr \ 
+	&& mv -v /usr/local/bin/vpn* /usr/bin \	
+	&& sed -i "s|/usr/local/libexec/softether|/usr|" /usr/bin/vpnserver \
+	&& sed -i "s|/usr/local/libexec/softether|/usr|" /usr/bin/vpncmd \
+	&& sed -i "s|/usr/local/libexec/softether|/usr|" /usr/bin/vpnclient \
+	&& sed -i "s|/usr/local/libexec/softether|/usr|" /usr/bin/vpnbridge \	
     && rm -rf /opt \
     && ln -s /usr/vpnserver /opt \    
     && mkdir -p /usr/vpnserver/config \
@@ -50,7 +64,9 @@ RUN apk add -U --no-cache bash iptables openssl-dev \
     && find /usr/bin/vpn* -type f ! -name vpnserver \
        -exec sh -c 'ln -s {} /opt/$(basename {})' \;
 
-WORKDIR /usr/vpnserver/
+#RUN find / -type f > /rez.txt
+
+WORKDIR /usr/local/libexec/softether/vpnserver/
 
 VOLUME ["/usr/vpnserver/config", "/usr/vpnserver/server_log/", "/usr/vpnserver/packet_log/", "/usr/vpnserver/security_log/"]
 
