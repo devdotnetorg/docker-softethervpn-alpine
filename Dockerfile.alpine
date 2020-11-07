@@ -1,5 +1,7 @@
 FROM alpine:3.12 as prep
 
+# from https://github.com/SoftEtherVPN/SoftEtherVPN_Stable
+
 ENV BUILD_VERSION=4.34-9745-beta \
     SHA256_SUM=a2d7951f4fafcef96ab8341a948a8d09ca02030e4161c5e90a34882aa8b34224
 
