@@ -16,7 +16,7 @@ Tags  | Dockerfile  | OS Version  |  SoftEther
 
 Tags  | Dockerfile  | OS Version  |  SoftEther
 ------------- | --  | --  | --
-`:latest` `:aarch64` `:5.01.9674-aarch64` | [Dockerfile](https://github.com/devdotnetorg/docker-softethervpn-alpine/blob/master/Dockerfile.aarch64) | `alpine:3.12` | Latest ([v5.01.9674](https://github.com/SoftEtherVPN/SoftEtherVPN/tree/5.01.9674))
+`:aarch64` `:5.01.9674-aarch64` | [Dockerfile](https://github.com/devdotnetorg/docker-softethervpn-alpine/blob/master/Dockerfile.aarch64) | `alpine:3.12` | Latest ([v5.01.9674](https://github.com/SoftEtherVPN/SoftEtherVPN/tree/5.01.9674))
 
 ### Coming soon Linux arm32 Tags ###
 
