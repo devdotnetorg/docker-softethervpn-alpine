@@ -4,10 +4,25 @@
 
 Based on repo: [GitHub /siomiz/SoftEtherVPN](https://github.com/siomiz/SoftEtherVPN "GitHub /siomiz/SoftEtherVPN")
 
-## Image Tags
-Base OS Image | Latest Stable ([v4.34-9745-beta](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.34-9745-beta))
-------------- | --
-`alpine:3.12` | `:latest` `:4.34`
+## Image Tags ##
+
+### Linux amd64 Tags ###
+
+Tags  | Dockerfile  | OS Version  |  SoftEther
+------------- | --  | --  | --
+`:latest` `:4.34` | [Dockerfile](https://github.com/devdotnetorg/docker-softethervpn-alpine/blob/master/Dockerfile.alpine) | `alpine:3.12` | Latest Stable ([v4.34-9745-beta](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.34-9745-beta))
+
+### Linux arm64 Tags ###
+
+Tags  | Dockerfile  | OS Version  |  SoftEther
+------------- | --  | --  | --
+`:latest` `:aarch64` `:5.01.9674-aarch64` | [Dockerfile](https://github.com/devdotnetorg/docker-softethervpn-alpine/blob/master/Dockerfile.aarch64) | `alpine:3.12` | Latest ([v5.01.9674](https://github.com/SoftEtherVPN/SoftEtherVPN/tree/5.01.9674))
+
+### Coming soon Linux arm32 Tags ###
+
+Tags  | Dockerfile  | OS Version  |  SoftEther
+------------- | --  | --  | --
+`:latest` `:armhf` `:5.01.9674-armhf` | [Dockerfile](https://github.com/devdotnetorg/docker-softethervpn-alpine/blob/master/Dockerfile.armhf) | `alpine:3.12` | Latest ([v5.01.9674](https://github.com/SoftEtherVPN/SoftEtherVPN/tree/5.01.9674))
 
 ## Setup
  - L2TP/IPSec PSK + OpenVPN
@@ -137,10 +152,13 @@ The output will have `CERT` and `KEY` already filled in. Modify `PSK`/`USERS`.
 
 Certificate volumes support (like `-v` or `--volumes-from`) will be added at some point...
 
-## ToDo ##
+## Assembly for ARM devices ##
 
-Dockerfile.aarch64 - Image for ARM64 arm64v8 aarch64 build on Banana Pi BPI-M64 with support MUSL
-Coming soon for ARM32 arm32v7
+The assembly for the aarch64 architecture (ARM64v8) was done on the [Banana Pi BPI-M64](http://wiki.banana-pi.org/Banana_Pi_BPI-M64) evaluation board.
+
+The assembly for the armhf architecture (ARM32v7) was done on the [Cubietruck](https://habr.com/ru/post/186576/) evaluation board.
+
+SoftEther VPN was compiled with musl option: `export USE_MUSL=YES`. [Build on musl-based linux](https://github.com/SoftEtherVPN/SoftEtherVPN/blob/master/src/BUILD_UNIX.md#build-on-musl-based-linux).
 
 ## License ##
 
