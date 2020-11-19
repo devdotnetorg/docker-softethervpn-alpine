@@ -21,8 +21,8 @@ RUN apk add -U build-base ncurses-dev openssl-dev readline-dev zip zlib-dev make
     && cd /usr/local/src/SoftEtherVPN_Stable-* \
 	&& export USE_MUSL=YES \
     && ./configure \
-    && make -C build \
-    && make -C build install \
+    && make \
+    && make install \
     && touch /usr/vpnserver/vpn_server.config \
     && zip -r9 /artifacts.zip /usr/vpn* /usr/bin/vpn*
 
