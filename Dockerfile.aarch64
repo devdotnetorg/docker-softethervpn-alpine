@@ -1,10 +1,9 @@
-FROM alpine:3.12 as prep
+FROM alpine:3.13 as prep
 
 # from https://github.com/SoftEtherVPN/SoftEtherVPN
 
-ENV BUILD_VERSION=5.01.9674
-
-RUN apk add -U git \
+RUN apk update \
+	&& apk add --no-cache --upgrade git \
 	&& mkdir -p /usr/local/src \
 	&& cd /usr/local/src \
 	&& git clone https://github.com/SoftEtherVPN/SoftEtherVPN.git \
@@ -12,24 +11,25 @@ RUN apk add -U git \
 	&& git submodule init \
 	&& git submodule update
 
-FROM alpine:3.12 as build
+FROM alpine:3.13 as build
 
 COPY --from=prep /usr/local/src /usr/local/src
 
 ENV LANG=en_US.UTF-8
 
-RUN apk add -U build-base ncurses-dev openssl-dev readline-dev zip zlib-dev make cmake \
-	&& cd /usr/local/src/SoftEtherVPN \
+RUN apk update \
+	&& apk add --no-cache --upgrade build-base ncurses-dev openssl-dev readline-dev zip zlib-dev make cmake libsodium-dev
+RUN cd /usr/local/src/SoftEtherVPN \
 	&& export USE_MUSL=YES \
-	&& ./configure \
-	&& make -C build \
-	&& make -C build install
+	&& ./configure
+RUN make -C build
+RUN make -C build install
 
 #Add bin files
 RUN touch /usr/local/libexec/softether/vpnserver/vpn_server.config \
 	&& zip -r9 /artifacts.zip /usr/local/libexec/softether/vpn* /usr/local/bin/vpn* /usr/local/lib64/*
 
-FROM alpine:3.12
+FROM alpine:3.13
 
 MAINTAINER DevDotNet.Org <anton@devdotnet.org>
 LABEL maintainer="DevDotNet.Org <anton@devdotnet.org>" \
@@ -43,7 +43,8 @@ ENV LANG=en_US.UTF-8
 
 ENV LIFETIMELOGS=0
 
-RUN apk add -U --no-cache bash iptables openssl-dev musl \
+RUN apk update \
+	&& apk add --no-cache --upgrade bash iptables openssl-dev musl \
     && chmod +x /entrypoint.sh /gencert.sh /eraselogs.sh \
     && unzip -o /artifacts.zip -d / \
 	&& rm /artifacts.zip \
